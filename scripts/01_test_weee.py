@@ -26,7 +26,11 @@ with sync_playwright() as p:
         time.sleep(3)
 
 
-        # 상품 링크 탐색
+        # ---------------------------------
+        # 상품 URL 수집
+        # ---------------------------------
+
+        # 상품 상세페이지 링크들을 찾는다.
         product_links = page.locator(
             'a[href*="/en/product/"]'
         )
@@ -37,13 +41,13 @@ with sync_playwright() as p:
         )
 
 
-        # URL 추출
+        # 각 링크의 실제 href 값을 가져온다.
         hrefs = product_links.evaluate_all(
             "elements => elements.map(element => element.href)"
         )
 
 
-        # 중복 URL 제거
+        # 중복 URL 제거 후 정렬
         unique_hrefs = sorted(
             set(hrefs)
         )
@@ -54,7 +58,7 @@ with sync_playwright() as p:
         )
 
 
-        # 첫 상품 선택
+        # 테스트용으로 첫 상품을 선택
         first_product_url = unique_hrefs[0]
 
         print(
@@ -63,7 +67,10 @@ with sync_playwright() as p:
         )
 
 
-        # 상품 상세페이지 이동
+        # ---------------------------------
+        # 상품 상세페이지 접속
+        # ---------------------------------
+
         page.goto(first_product_url)
 
         print(
@@ -72,9 +79,9 @@ with sync_playwright() as p:
         )
 
 
-        # -----------------------------
-        # 상품명
-        # -----------------------------
+        # ---------------------------------
+        # 상품명 raw 추출
+        # ---------------------------------
 
         product_name_element = page.get_by_test_id(
             "wid-pdp-product-name"
@@ -88,43 +95,59 @@ with sync_playwright() as p:
         )
 
 
-        # -----------------------------
-        # 가격
-        # -----------------------------
+        # ---------------------------------
+        # 가격 raw 추출
+        # ---------------------------------
 
-        # 가격 정보를 담고 있는 HTML 요소를 찾는다.
+        # 가격 관련 HTML 요소들을 찾는다.
         price_elements = page.get_by_test_id(
             "wid-pdp-price-left-part"
         )
 
 
-        # 같은 test id를 가진 요소가 여러 개 있을 수 있으므로
-        # 모든 요소의 텍스트를 가져온다.
+        # 모든 가격 후보 텍스트를 가져온다.
         price_texts = price_elements.all_inner_texts()
 
 
-        # 아직 실제 가격을 찾지 못했으므로
-        # 초기값은 None으로 둔다.
         raw_price_text = None
 
 
-        # 가격 후보를 하나씩 검사한다.
+        # 빈 요소를 제외하고 실제 가격 문자열 선택
         for text in price_texts:
 
-            # 빈 문자열이 아닌 요소를 찾는다.
             if text.strip():
 
-                # 웹페이지에서 보이는 원본 가격 문자열을 저장한다.
                 raw_price_text = text.strip()
 
-                # 필요한 값을 찾았으므로 반복 종료
                 break
 
 
-        # 아직 정제하지 않은 raw 가격 출력
         print(
             "Raw price text:",
             raw_price_text
+        )
+
+
+        # ---------------------------------
+        # 브랜드 raw 추출
+        # ---------------------------------
+
+        # Weee에서 브랜드 링크에 부여한
+        # data-testid를 이용해 브랜드 요소를 찾는다.
+        brand_element = page.get_by_test_id(
+            "wid-pdp-brand-link"
+        ).first
+
+
+        # 브랜드 영역의 원본 텍스트를 그대로 가져온다.
+        brand_raw = brand_element.inner_text()
+
+
+        # 아직 "Shop more from ..." 문구를 제거하지 않는다.
+        # 나중 SQL cleaning 단계에서 처리할 예정이다.
+        print(
+            "Brand raw:",
+            brand_raw
         )
 
     finally:
