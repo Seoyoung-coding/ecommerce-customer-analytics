@@ -150,5 +150,30 @@ with sync_playwright() as p:
             brand_raw
         )
 
+        # ---------------------------------
+        # 원산지(origin) 위치 탐색
+        # ---------------------------------
+
+        # 현재 상품 상세페이지에서
+        # 사용자가 화면에서 볼 수 있는 전체 텍스트를 가져온다.
+        body_text = page.locator("body").inner_text()
+
+        # 전체 페이지 텍스트를 줄 단위로 나눈다.
+        lines = body_text.splitlines()
+
+        # 한 줄씩 확인한다.
+        for line in lines:
+
+            # 대소문자 차이 없이 비교하기 위해
+            # 현재 줄을 모두 소문자로 변환한다.
+            lower_line = line.lower()
+
+            # "origin" 또는 "country"라는 단어가 포함된 줄만 출력한다.
+            if "origin" in lower_line or "country" in lower_line:
+                print(
+                    "Origin-related text:",
+                    line
+                )
+
     finally:
         browser.close()
