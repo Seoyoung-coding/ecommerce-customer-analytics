@@ -284,20 +284,59 @@ with sync_playwright() as p:
             len(unique_hrefs)
         )
 
+        # ---------------------------------
+        # 여러 상품 수집 테스트
+        # ---------------------------------
 
-        # 테스트용으로 첫 번째 상품 선택
-        first_product_url = unique_hrefs[0]
+        # 각 상품의 dictionary 결과를 저장할 리스트
+        products = []
+
+        # 처음에는 전체 60개가 아니라
+        # 앞의 5개 상품만 테스트한다.
+        for product_url in unique_hrefs[:5]:
+
+            try:
+
+                # 상품 URL 하나를 extract_product 함수에 전달한다.
+                product = extract_product(
+                    page,
+                    product_url
+                )
+
+                # 추출한 상품 dictionary를
+                # products 리스트에 추가한다.
+                products.append(product)
+
+                # 현재 어떤 상품까지 수집했는지 확인한다.
+                print(
+                    "Collected:",
+                    product["product_name"]
+                )
 
 
-        # 방금 만든 함수 실행
-        product = extract_product(
-            page,
-            first_product_url
+            # 특정 상품 하나에서 오류가 발생해도
+            # 전체 프로그램이 중단되지 않도록 한다.
+            except Exception as e:
+
+                print(
+                    "Failed:",
+                    product_url
+                )
+
+                print(
+                    "Error:",
+                    e
+                )
+
+        # 최종적으로 몇 개 상품을 수집했는지 출력
+        print(
+            "Collected product count:",
+            len(products)
         )
 
-
-        # dictionary 결과 출력
-        print(product)
+        # 수집된 결과 확인
+        for product in products:
+            print(product)
 
 
     finally:
