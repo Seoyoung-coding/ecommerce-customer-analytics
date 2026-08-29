@@ -208,6 +208,33 @@ with sync_playwright() as p:
             origin_raw
         )
 
+        # ---------------------------------
+        # 7. 상품 평점 raw 추출
+        # ---------------------------------
+
+        # raw HTML 안에서
+        # "overall_rating":"값"
+        # 형태를 찾는다.
+        rating_match = re.search(
+            r'\\"overall_rating\\":\\"([^"]*)\\"',
+            raw_html
+        )
+
+        # 기본값은 None
+        rating_raw = None
+
+        # overall_rating 값이 존재하면
+        if rating_match:
+            # 괄호 안에서 잡힌 실제 평점 값만 가져온다.
+            # 예: "5.0" -> 5.0
+            rating_raw = rating_match.group(1)
+
+        # 아직 숫자형으로 변환하지 않고
+        # raw 문자열 그대로 출력한다.
+        print(
+            "Rating raw:",
+            rating_raw
+        )
 
     finally:
         # 중간에 에러가 발생하더라도
