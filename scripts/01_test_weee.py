@@ -266,54 +266,6 @@ with sync_playwright() as p:
         )
 
         # ---------------------------------
-        # 10. 상품 판매량 raw 추출
-        # ---------------------------------
-
-        sold_count_match = re.search(
-            r'\\"sold_count\\":(?:\\"([^"]*)\\"|(\d+)|null)',
-            raw_html
-        )
-
-        sold_count_raw = None
-
-        if sold_count_match:
-
-            if sold_count_match.group(1):
-                sold_count_raw = sold_count_match.group(1)
-
-            elif sold_count_match.group(2):
-                sold_count_raw = sold_count_match.group(2)
-
-        print(
-            "Sold count raw:",
-            sold_count_raw
-        )
-
-        # ---------------------------------
-        # 11. 최근 판매량 표시 raw 추출
-        # ---------------------------------
-
-        last_week_sold_match = re.search(
-            r'\\"last_week_sold_count_ui\\":(?:\\"([^"]*)\\"|(\d+)|null)',
-            raw_html
-        )
-
-        last_week_sold_raw = None
-
-        if last_week_sold_match:
-
-            if last_week_sold_match.group(1):
-                last_week_sold_raw = last_week_sold_match.group(1)
-
-            elif last_week_sold_match.group(2):
-                last_week_sold_raw = last_week_sold_match.group(2)
-
-        print(
-            "Last week sold raw:",
-            last_week_sold_raw
-        )
-
-        # ---------------------------------
         # 10. 상품 판매 데이터 영역 찾기
         # ---------------------------------
 
