@@ -1,6 +1,8 @@
-from playwright.sync_api import sync_playwright
-import time
+from datetime import date
 import re
+import time
+from playwright.sync_api import sync_playwright
+
 
 
 START_URL = "https://www.weee.com/en/grocery-near-me/asian-supermarket-in-usa/korean-store"
@@ -285,41 +287,51 @@ with sync_playwright() as p:
         )
 
         # ---------------------------------
-        # 여러 상품 수집 테스트
+        # 60개 상품 전체 수집
         # ---------------------------------
 
-        # 각 상품의 dictionary 결과를 저장할 리스트
+        # 각 상품의 dictionary를 저장할 리스트
         products = []
 
-        # 처음에는 전체 60개가 아니라
-        # 앞의 5개 상품만 테스트한다.
-        for product_url in unique_hrefs[:5]:
+        # unique_hrefs에 들어있는 모든 상품 URL을 하나씩 처리한다.
+        #
+        # enumerate(..., start=1)
+        # → 상품의 순번도 함께 가져온다.
+        #
+        # 예:
+        # 1, 첫 번째 URL
+        # 2, 두 번째 URL
+        # ...
+        for index, product_url in enumerate(unique_hrefs, start=1):
 
             try:
 
-                # 상품 URL 하나를 extract_product 함수에 전달한다.
+                # 현재 상품 상세정보를 추출한다.
                 product = extract_product(
                     page,
                     product_url
                 )
 
-                # 추출한 상품 dictionary를
-                # products 리스트에 추가한다.
+                # 추출한 dictionary를 products 리스트에 저장한다.
                 products.append(product)
 
-                # 현재 어떤 상품까지 수집했는지 확인한다.
+                # 진행 상황을 출력한다.
                 print(
-                    "Collected:",
+                    f"[{index}/{len(unique_hrefs)}] Collected:",
                     product["product_name"]
                 )
 
+                # Weee 서버에 너무 빠르게 요청하지 않도록
+                # 각 상품 수집 후 1초 기다린다.
+                time.sleep(1)
+
 
             # 특정 상품 하나에서 오류가 발생해도
-            # 전체 프로그램이 중단되지 않도록 한다.
+            # 나머지 상품 수집은 계속한다.
             except Exception as e:
 
                 print(
-                    "Failed:",
+                    f"[{index}/{len(unique_hrefs)}] Failed:",
                     product_url
                 )
 
@@ -328,17 +340,12 @@ with sync_playwright() as p:
                     e
                 )
 
-        # 최종적으로 몇 개 상품을 수집했는지 출력
+        # 전체 작업이 끝난 후
+        # 실제 성공적으로 수집된 상품 개수를 출력한다.
         print(
             "Collected product count:",
             len(products)
         )
-
-        # 수집된 결과 확인
-        for product in products:
-            print(product)
-
-
     finally:
 
         browser.close()
