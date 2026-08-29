@@ -313,6 +313,98 @@ with sync_playwright() as p:
             last_week_sold_raw
         )
 
+        # ---------------------------------
+        # 10. 상품 판매 데이터 영역 찾기
+        # ---------------------------------
+
+        # product_properties가 시작되는 위치를 찾는다.
+        # 이 주변은 실제 "상품 객체" 데이터가 있는 영역이다.
+        product_data_start = raw_html.find(
+            '\\"product_properties\\"'
+        )
+
+        # 상품 객체 뒤에 등장하는 vendor 정보의 시작 위치를 찾는다.
+        product_data_end = raw_html.find(
+            '\\"vender_info_view\\"',
+            product_data_start
+        )
+
+        # 상품 객체 시작 위치를 찾았다면
+        if product_data_start != -1:
+
+            # vendor 정보 위치도 찾았다면
+            if product_data_end != -1:
+
+                # 실제 상품 데이터 영역만 잘라낸다.
+                product_data_block = raw_html[
+                                     product_data_start:product_data_end
+                                     ]
+
+            else:
+
+                # vendor 위치를 못 찾은 경우를 대비해서
+                # product_properties 뒤 5000글자까지만 가져온다.
+                product_data_block = raw_html[
+                                     product_data_start:product_data_start + 5000
+                                     ]
+
+        else:
+
+            # 상품 데이터 영역을 찾지 못하면 빈 문자열
+            product_data_block = ""
+
+        # ---------------------------------
+        # 11. sold_count raw 추출
+        # ---------------------------------
+
+        # 이제 raw_html 전체가 아니라
+        # 실제 상품 데이터 영역 안에서만 sold_count를 찾는다.
+        sold_count_match = re.search(
+            r'\\"sold_count\\":(?:\\"([^"]*)\\"|(\d+)|null)',
+            product_data_block
+        )
+
+        sold_count_raw = None
+
+        if sold_count_match:
+
+            # 문자열 값이 있으면 사용
+            if sold_count_match.group(1):
+                sold_count_raw = sold_count_match.group(1)
+
+            # 숫자 값이 있으면 사용
+            elif sold_count_match.group(2):
+                sold_count_raw = sold_count_match.group(2)
+
+        print(
+            "Sold count raw:",
+            sold_count_raw
+        )
+
+        # ---------------------------------
+        # 12. 지난주 판매량 raw 추출
+        # ---------------------------------
+
+        last_week_sold_match = re.search(
+            r'\\"last_week_sold_count_ui\\":(?:\\"([^"]*)\\"|(\d+)|null)',
+            product_data_block
+        )
+
+        last_week_sold_raw = None
+
+        if last_week_sold_match:
+
+            if last_week_sold_match.group(1):
+                last_week_sold_raw = last_week_sold_match.group(1)
+
+            elif last_week_sold_match.group(2):
+                last_week_sold_raw = last_week_sold_match.group(2)
+
+        print(
+            "Last week sold raw:",
+            last_week_sold_raw
+        )
+
     finally:
         # 중간에 에러가 발생하더라도
         # Chromium 브라우저는 반드시 종료된다.
