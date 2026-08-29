@@ -37,13 +37,13 @@ with sync_playwright() as p:
         )
 
 
-        # 모든 상품 URL 추출
+        # URL 추출
         hrefs = product_links.evaluate_all(
             "elements => elements.map(element => element.href)"
         )
 
 
-        # URL 중복 제거
+        # 중복 URL 제거
         unique_hrefs = sorted(
             set(hrefs)
         )
@@ -63,7 +63,7 @@ with sync_playwright() as p:
         )
 
 
-        # 상품 상세페이지 접속
+        # 상품 상세페이지 이동
         page.goto(first_product_url)
 
         print(
@@ -72,21 +72,59 @@ with sync_playwright() as p:
         )
 
 
-        # Weee가 상품명에 부여한 data-testid를 이용하여
-        # 상품명 HTML 요소를 정확하게 찾는다.
+        # -----------------------------
+        # 상품명
+        # -----------------------------
+
         product_name_element = page.get_by_test_id(
             "wid-pdp-product-name"
         )
 
-
-        # HTML 요소 안의 실제 문자열 추출
         product_name = product_name_element.inner_text()
 
-
-        # raw 상품명 출력
         print(
             "Product name:",
             product_name
+        )
+
+
+        # -----------------------------
+        # 가격
+        # -----------------------------
+
+        # 가격 정보를 담고 있는 HTML 요소를 찾는다.
+        price_elements = page.get_by_test_id(
+            "wid-pdp-price-left-part"
+        )
+
+
+        # 같은 test id를 가진 요소가 여러 개 있을 수 있으므로
+        # 모든 요소의 텍스트를 가져온다.
+        price_texts = price_elements.all_inner_texts()
+
+
+        # 아직 실제 가격을 찾지 못했으므로
+        # 초기값은 None으로 둔다.
+        raw_price_text = None
+
+
+        # 가격 후보를 하나씩 검사한다.
+        for text in price_texts:
+
+            # 빈 문자열이 아닌 요소를 찾는다.
+            if text.strip():
+
+                # 웹페이지에서 보이는 원본 가격 문자열을 저장한다.
+                raw_price_text = text.strip()
+
+                # 필요한 값을 찾았으므로 반복 종료
+                break
+
+
+        # 아직 정제하지 않은 raw 가격 출력
+        print(
+            "Raw price text:",
+            raw_price_text
         )
 
     finally:
