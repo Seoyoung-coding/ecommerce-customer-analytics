@@ -37,13 +37,13 @@ with sync_playwright() as p:
         )
 
 
-        # URL 추출
+        # 모든 상품 URL 추출
         hrefs = product_links.evaluate_all(
             "elements => elements.map(element => element.href)"
         )
 
 
-        # 중복 제거
+        # URL 중복 제거
         unique_hrefs = sorted(
             set(hrefs)
         )
@@ -54,7 +54,7 @@ with sync_playwright() as p:
         )
 
 
-        # 첫 번째 상품 URL 선택
+        # 첫 상품 선택
         first_product_url = unique_hrefs[0]
 
         print(
@@ -63,14 +63,30 @@ with sync_playwright() as p:
         )
 
 
-        # 첫 번째 상품의 상세페이지로 이동
+        # 상품 상세페이지 접속
         page.goto(first_product_url)
 
-
-        # 상세페이지에 정상적으로 접속했는지 확인
         print(
             "Product page title:",
             page.title()
+        )
+
+
+        # Weee가 상품명에 부여한 data-testid를 이용하여
+        # 상품명 HTML 요소를 정확하게 찾는다.
+        product_name_element = page.get_by_test_id(
+            "wid-pdp-product-name"
+        )
+
+
+        # HTML 요소 안의 실제 문자열 추출
+        product_name = product_name_element.inner_text()
+
+
+        # raw 상품명 출력
+        print(
+            "Product name:",
+            product_name
         )
 
     finally:
