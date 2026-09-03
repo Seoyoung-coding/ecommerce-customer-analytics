@@ -1,12 +1,14 @@
 from datetime import date
+from pathlib import Path
+import csv
 import re
 import time
+
 from playwright.sync_api import sync_playwright
 
 
-
 START_URL = "https://www.weee.com/en/grocery-near-me/asian-supermarket-in-usa/korean-store"
-
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 # --------------------------------------------------
 # 상품 1개의 상세정보를 추출하는 함수
@@ -218,6 +220,8 @@ def extract_product(page, product_url):
     # ---------------------------------
 
     return {
+        "retailer": "WEEE",
+        "observed_at": date.today().isoformat(),
         "product_url": product_url,
         "product_name": product_name,
         "price_raw": raw_price_text,
@@ -346,6 +350,73 @@ with sync_playwright() as p:
             "Collected product count:",
             len(products)
         )
+
+        # ---------------------------------
+        # 수집한 raw 데이터를 CSV로 저장
+        # ---------------------------------
+
+        # raw 데이터 파일을 저장할 폴더 경로
+        output_dir = PROJECT_ROOT / "data" / "raw"
+
+        # data/raw 폴더가 없으면 자동으로 생성한다.
+        #
+        # parents=True
+        # → data 폴더까지 없으면 같이 만든다.
+        #
+        # exist_ok=True
+        # → 이미 폴더가 있어도 에러를 발생시키지 않는다.
+        output_dir.mkdir(
+            parents=True,
+            exist_ok=True
+        )
+
+        # 오늘 날짜를 YYYY-MM-DD 형식으로 가져온다.
+        today = date.today().isoformat()
+
+        # 최종 CSV 파일 경로를 만든다.
+        #
+        # 예:
+        # data/raw/weee_products_2026-08-29.csv
+        output_file = output_dir / f"weee_products_{today}.csv"
+
+        # products 리스트가 비어있지 않을 경우에만 CSV를 만든다.
+        if products:
+            # CSV 파일을 쓰기 모드("w")로 연다.
+            #
+            # newline=""
+            # → CSV에 불필요한 빈 줄이 생기는 것을 방지한다.
+            #
+            # encoding="utf-8"
+            # → 한글이나 특수문자가 깨지지 않도록 한다.
+            with open(
+                    output_file,
+                    "w",
+                    newline="",
+                    encoding="utf-8"
+            ) as csv_file:
+                # 첫 번째 상품 dictionary의 key들을
+                # CSV의 column 이름으로 사용한다.
+                fieldnames = products[0].keys()
+
+                # dictionary를 CSV row로 저장할 writer를 만든다.
+                writer = csv.DictWriter(
+                    csv_file,
+                    fieldnames=fieldnames
+                )
+
+                # CSV 첫 줄에 column 이름을 작성한다.
+                writer.writeheader()
+
+                # products 리스트 안의 모든 dictionary를
+                # CSV row로 한 번에 저장한다.
+                writer.writerows(products)
+
+            # 저장된 파일 위치 출력
+            print(
+                "Saved CSV:",
+                output_file
+            )
+
     finally:
 
         browser.close()
